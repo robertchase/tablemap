@@ -1,0 +1,11 @@
+tmp*
+.env
+*.swp
+*.pyc
+*-checkpoint.ipynb
+build/
+dist/
+play/
+meander.egg-info/
+notebooks/
+postgres.txt
