@@ -67,10 +67,10 @@ def table():
 
 @pytest.fixture
 def my_class():
-    """return class for testing ObjectTable"""
+    """return class for testing Adapter"""
 
     class MyClass:
-        """class for testing ObjectTable"""
+        """class for testing Adapter"""
 
         # pylint: disable=invalid-name
         def __init__(self, pk=None, A=None, B=None, C=None):
@@ -104,10 +104,10 @@ def my_class():
 
 
 @pytest.fixture
-def object_table(my_class):  # pylint: disable=redefined-outer-name
+def adapter(my_class):  # pylint: disable=redefined-outer-name
     """return a mocked-up ObjectTable for testing"""
 
-    class MyTable(tablemap.ObjectTable):
+    class MyTable(tablemap.Adapter):
         """test table class"""
 
         table_name = "a_table"

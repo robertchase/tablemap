@@ -3,16 +3,14 @@
 from tablemap.table import Table
 
 
-class ObjectTable(Table):
+class Adapter(Table):
     """object serialization/deserialization layer on top of Table
 
     specify values for:
-        object_class: python class that is being serialized to/from the Table
-        object_factory: callable that builds an object_class from a dict
-        object_serializer: callable that builds a dict from an object_class
+        object_factory: callable that builds an instance from a dict
+        object_serializer: callable that builds a dict from an instance
     """
 
-    object_class = object
     object_factory = object  # object_factory(item: dict) -> object
     object_serializer = object  # object_serializer(item: object) -> dict
 
@@ -83,7 +81,7 @@ class ObjectTable(Table):
     @classmethod
     async def delete(cls, con, where, *args):
         await cls.setup(con)
-        if isinstance(where, cls.object_class):
+        if not isinstance(where, str):
             args = [getattr(where, cls.pk)]
             where = f"{cls.quote(cls.pk)}=%s"
         return await super().delete(con, where, *args)
