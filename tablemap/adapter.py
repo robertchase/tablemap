@@ -79,9 +79,6 @@ class Adapter(Table):
         return result
 
     @classmethod
-    async def delete(cls, con, where, *args):
+    async def delete(cls, con, data):  # pylint: disable=arguments-renamed
         await cls.setup(con)
-        if not isinstance(where, str):
-            args = [getattr(where, cls.pk)]
-            where = f"{cls.quote(cls.pk)}=%s"
-        return await super().delete(con, where, *args)
+        return await super().delete(con, getattr(data, cls.pk))

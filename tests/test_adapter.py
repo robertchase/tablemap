@@ -9,9 +9,7 @@ def test_update(common_cursor, adapter, my_class):
     async def _test():
         data = my_class(pk=42, A=10, C=30)
         await adapter.update(common_cursor, data)
-        assert adapter.last_query == (
-            "UPDATE !a_table! SET !A!=>10< WHERE !pk!=>42<"
-        )
+        assert adapter.last_query == ("UPDATE !a_table! SET !A!=>10< WHERE !pk!=>42<")
 
     asyncio.run(_test())
 
@@ -48,9 +46,7 @@ def test_save_with_pk(common_cursor, adapter, my_class):
     async def _test():
         data = my_class(pk=42, A=10)
         await adapter.save(common_cursor, data)
-        assert adapter.last_query == (
-            "UPDATE !a_table! SET !A!=>10< WHERE !pk!=>42<"
-        )
+        assert adapter.last_query == ("UPDATE !a_table! SET !A!=>10< WHERE !pk!=>42<")
 
     asyncio.run(_test())
 
