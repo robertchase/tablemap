@@ -161,8 +161,8 @@ def test_delete(common_cursor, table):
     """test the delete method"""
 
     async def _test():
-        await table.delete(common_cursor, key := random.randint(100, 1000))
-        assert table.last_query == f"DELETE FROM !test_table! WHERE !pk!=>{key}<"
+        await table.delete(common_cursor, "xyz=%s", arg := random.randint(100, 1000))
+        assert table.last_query == f"DELETE FROM !test_table! WHERE xyz=>{arg}<"
 
     asyncio.run(_test())
 

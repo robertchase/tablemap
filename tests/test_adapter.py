@@ -2,6 +2,8 @@
 import asyncio
 import random
 
+import pytest
+
 
 def test_update(common_cursor, adapter, my_class):
     """test the update method"""
@@ -95,12 +97,49 @@ def test_query(common_cursor, adapter):
     asyncio.run(_test())
 
 
-def test_delete(common_cursor, adapter, my_class):
+def test_delete_with_pk(common_cursor, adapter):
+    """test the delete method with primary key"""
+
+    async def _test():
+        key = random.randint(100, 1000)
+        await adapter.delete(common_cursor, pk=key)
+        assert adapter.last_query == f"DELETE FROM !a_table! WHERE !pk!=>{key}<"
+
+        with pytest.raises(TypeError):
+            await adapter.delete(common_cursor, pk=100, condition="abc")
+
+        with pytest.raises(TypeError):
+            await adapter.delete(common_cursor, "asdf", pk=100)
+
+    asyncio.run(_test())
+
+
+def test_delete_with_condition(common_cursor, adapter):
+    """test the delete method"""
+
+    async def _test():
+        key = random.randint(100, 1000)
+        await adapter.delete(common_cursor, condition="xyz=%s", args=key)
+        assert adapter.last_query == f"DELETE FROM !a_table! WHERE xyz=>{key}<"
+
+        with pytest.raises(TypeError):
+            await adapter.delete(common_cursor, 1000)
+
+    asyncio.run(_test())
+
+
+def test_delete_with_object(common_cursor, adapter, my_class):
     """test the delete method"""
 
     async def _test():
         data = my_class(pk=42, A=10)
-        data = await adapter.delete(common_cursor, data)
-        assert adapter.last_query == ("DELETE FROM !a_table! WHERE !pk!=>42<")
+        await adapter.delete(common_cursor, data)
+        assert adapter.last_query == "DELETE FROM !a_table! WHERE !pk!=>42<"
+
+        with pytest.raises(TypeError):
+            await adapter.delete(common_cursor, data, pk=100)
+
+        with pytest.raises(TypeError):
+            await adapter.delete(common_cursor, data, args=100)
 
     asyncio.run(_test())

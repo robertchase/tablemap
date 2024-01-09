@@ -132,12 +132,16 @@ class Table:
         return cls.row_count
 
     @classmethod
-    async def delete(cls, con, pk) -> int:
-        """delete from underlying table based on primary key"""
+    async def delete(cls, con, condition, *args) -> int:
+        """delete from underlying table"""
         await cls.setup(con)
+        if args:
+            args = [con.escape(arg) for arg in args]
+            if len(args) == 1:
+                args = args[0]
+            condition = condition % args
         cls.last_query = (
-            f"DELETE FROM {cls.quote(cls.table_name)}"
-            f" WHERE {cls.quote(cls.pk)}={con.escape(pk)}"
+            f"DELETE FROM {cls.quote(cls.table_name)}" f" WHERE {condition}"
         )
         await con.execute(cls.last_query)
         cls.row_count = con.rowcount
