@@ -13,8 +13,8 @@ The `tablemap` package provides a simple mapping between a `python` class and a 
 
 #### design philosophy
 
-* `SQL` is a good language for what it does, and it should be used as-is, rather than being re-implemented with objects. Most queries&mdash;and all joins&mdash;should be written in `SQL`.
-* `python` is a good language for what it does, and it should not be used to emulate or re-implement the things that the database is already doing.
+* `SQL` is a good language for relational operations, and should not be re-implemented with objects. Most queries&mdash;and all joins&mdash;should be written in `SQL`.
+* `python` is a good general purpose language, and it should not be used to emulate or re-implement things that a relational database is already doing well.
 * `CRUD` operations should happen with simple objects/relations by primary key.
 * Pending or interdependent multi-object mutations should be handled with a database `transaction` instead of with `python` code.
 *  Objects that are being synchronized with the database *should not have to carry around `SQL` knowledge*; instead, a separate class should handle all database interaction and *marshall* the data to/from the synchronized object.
@@ -109,7 +109,7 @@ SELECT *, IFNULL(token_expire < NOW(), 1) AS is_expired FROM token ...
 
 An `Adapter` has the following methods:
 
---
+---
 #### save
 
 ```
@@ -124,7 +124,7 @@ async def save(cls,
 
 ###### parameters
 
-*data* - `python` object that is synced to the underlying table
+*data* - `python` object that is tied to the underlying table
 
 *raw* - `dict` whose keys are column names and whose values are raw `SQL` to be executed without being escaped. For instance, to set a timestamp to ten seconds from now, have the database perform the calculation by passing `{"ts_field": "NOW() + INTERVAL 10 SECONDS"}` in the `raw` parameter.
 
