@@ -143,7 +143,7 @@ If an `INSERT` is performed, `data` will be updated with the database-generated 
 
 Return the number of rows affected (either 0 or 1 since the operation is by primary key)
 
---
+---
 #### insert
 
 ```
@@ -179,7 +179,7 @@ The `save` method will always try to `UPDATE` a row if `data` contains a value f
 Return the number of rows affected (either 0 or 1 since the operation is by primary key)
 
 
---
+---
 #### update
 
 ```
@@ -213,7 +213,7 @@ All values contained in `data` will be included in the `UPDATE` statement, even 
 Return the number of rows affected (either 0 or 1 since the operation is by primary key)
 
 
---
+---
 #### load
 
 ```
@@ -244,7 +244,7 @@ The data in row is used to build a new object using the `object_factory`.
 Return the resulting row after being processed by `object_factory` or None if not found
 
 
---
+---
 #### query
 
 ```
@@ -293,7 +293,7 @@ Where `firstname` and `lastname` are escaped by the `query` method, and then sub
 Return an object (the result of `object_factory`), a list of objects, or None
 
 
---
+---
 #### delete
 
 ```
@@ -331,7 +331,7 @@ Delete a row from the underlying table.
 
 Return the number of rows affected
 
---
+---
 #### before_save
 
 ```
@@ -362,7 +362,7 @@ None
 Return the `dict` as modified
 
 
---
+---
 #### before_save
 
 ```
