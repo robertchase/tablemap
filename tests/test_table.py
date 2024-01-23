@@ -1,7 +1,6 @@
 """test table operations"""
 import asyncio
 import random
-from unittest import mock
 
 import tablemap
 
@@ -52,7 +51,6 @@ def test_insert_with_pk(common_cursor, table):
     """test the insert method with primary key present"""
 
     async def _test():
-        common_cursor.insert_auto_pk = mock.AsyncMock()
         await table.insert(common_cursor, {"pk": 42, "A": 10})
         assert table.last_query == (
             "INSERT INTO !test_table! (!A!,!pk!) VALUES (>10<,>42<)"
@@ -66,7 +64,6 @@ def test_insert_without_pk(common_cursor, table):
     """test the insert method with primary key absent"""
 
     async def _test():
-        common_cursor.insert_auto_pk.reset_mock()
         common_cursor.primary_key_ = random.randint(100, 1000)
         table.last_id = None
         await table.insert(common_cursor, {"A": 10})

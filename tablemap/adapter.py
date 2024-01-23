@@ -11,8 +11,8 @@ class Adapter(Table):
         object_serializer: callable that builds a dict from an instance
     """
 
-    object_factory = object  # object_factory(item: dict) -> object
-    object_serializer = object  # object_serializer(item: object) -> dict
+    object_factory = callable  # object_factory(item: dict) -> object
+    object_serializer = callable  # object_serializer(item: object) -> dict
 
     @classmethod
     # pylint: disable=unused-argument
