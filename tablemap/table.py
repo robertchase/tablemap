@@ -14,6 +14,36 @@ class Calculated:  # pylint: disable=too-few-public-methods
         self.value = value
 
 
+class SpecialHandling:
+    """do complex operations on select/insert/update
+
+    The default handling is to con.quote column names on SELECT, and con.escape
+    values on INSERT/UPDATE.
+
+    If additional handling is required, for instance, adding GEO functions
+    to transform data in the SQL statement, two functions can be supplied for
+    performing this additional handling:
+
+    1. read_column_fn(con: Connection, col_name: str) -> str
+
+        Modify col_name (for instance, wrap it in a SQL function) and return the
+        value. The returned value will be used in the SELECT statement (for
+        query and for load). The returned value will not be passed to con.quote.
+
+    2. save_fn(con: Connection, col_value: str) -> str
+
+        Modify and return col_value. The returned value will be used in INSERT
+        or UPDATE statements where the escaped col_value would otherwise have
+        been used. The returned value will not be passed to con.escape.
+
+    Either or both functions can be specified.
+    """
+
+    def __init__(self, read_column_fn=None, save_fn=None):
+        self.read_column_fn = read_column_fn
+        self.save_fn = save_fn
+
+
 class Table:
     """SQL table to dict mapper
 
@@ -25,6 +55,7 @@ class Table:
 
     # these values are managed internally
     calculated = None
+    special = {}
     pk = None
     fields = []
     quote_ = None
@@ -49,12 +80,33 @@ class Table:
             # grab quote character from connection
             cls.quote_ = con.quote
 
-            # setup calculated fields for the query method
-            cls.calculated = ",".join(
+            # setup SpecialHandling fields
+            cls.special = {
+                k: v
+                for k in dir(cls)
+                if isinstance(v := getattr(cls, k), SpecialHandling)
+            }
+
+            # setup field list for the query method
+            fields = [cls.quote(cls.pk)]
+
+            def read_column(con, column_name):
+                """quote or perform special handling for queried columns"""
+                result = cls.quote(column_name)
+                if column_name in cls.special:
+                    special = cls.special[column_name]
+                    if hasattr(special, "read_column_fn"):
+                        result = special.read_column_fn(con, column_name) +\
+                            f" AS {cls.quote(column_name)}"
+                return result
+
+            fields.extend(read_column(con, col) for col in cls.fields)
+            fields.extend(
                 f"{v.value} AS {cls.quote(k)}"
                 for k in dir(cls)
                 if isinstance(v := getattr(cls, k), Calculated)
             )
+            cls.query_fields = ",".join(fields)
 
             cls.is_init = True
 
@@ -62,6 +114,16 @@ class Table:
     def quote(cls, data: str) -> str:
         """properly quote a database table or column name"""
         return f"{cls.quote_}{data}{cls.quote_}"
+
+    @classmethod
+    def escape(cls, con, column_name, column_value):
+        """escape or perform special handling for column values"""
+        value = con.escape(column_value)
+        if column_name in cls.special:
+            special = cls.special[column_name]
+            if hasattr(special, "save_fn"):
+                value = special.save_fn(con, column_value)
+        return value
 
     @classmethod
     async def save(cls, con, data: dict, raw: dict = None) -> int:
@@ -87,7 +149,7 @@ class Table:
         if not isinstance(data, dict):
             raise ValueError("expecting a dict")
         await cls.setup(con)
-        ins = {k: con.escape(v) for k, v in data.items() if k in cls.fields}
+        ins = {k: cls.escape(con, k, v) for k, v in data.items() if k in cls.fields}
         if cls.pk in data:
             ins[cls.pk] = con.escape(data[cls.pk])
         if raw:
@@ -117,7 +179,7 @@ class Table:
         await cls.setup(con)
         if cls.pk not in data:
             raise AttributeError(f"primary key ({cls.pk}) not provided")
-        upd = {k: con.escape(v) for k, v in data.items() if k in cls.fields}
+        upd = {k: cls.escape(con, k, v) for k, v in data.items() if k in cls.fields}
         if raw:
             upd.update(raw)  # overlay update with raw items
         if upd:
@@ -156,8 +218,10 @@ class Table:
             else:
                 args = con.escape(args)
             condition = condition % args
-        cols = f"SELECT *, {cls.calculated}" if cls.calculated else "SELECT *"
-        query = f"{cols} FROM {cls.quote(cls.table_name)} WHERE {condition}"
+        query = (
+            f"SELECT {cls.query_fields}"
+            f" FROM {cls.quote(cls.table_name)} WHERE {condition}"
+        )
         if limit:
             query += f" LIMIT {limit}"
         return query

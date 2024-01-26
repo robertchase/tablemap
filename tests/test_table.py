@@ -213,3 +213,40 @@ def test_calculated(common_cursor):
         )
 
     asyncio.run(_test())
+
+
+def test_special_handling(common_cursor):
+    """test the SpecialHandling field mechanism"""
+
+    def my_save(con, value):
+        return f"Special({con.escape(str(value)[::-1])})"
+
+    def my_read_column(con, column):
+        return f"SpecialRead({SpecialTable.quote(column)})"
+
+    class SpecialTable(tablemap.Table):
+        """test table class with SpecialHandling class fields"""
+
+        table_name = "the_table"
+
+        A = tablemap.SpecialHandling(
+            read_column_fn=my_read_column,
+            save_fn=my_save,
+        )
+
+    async def _test():
+
+        common_cursor.description = []
+        common_cursor.fetchall.return_value = []
+        await SpecialTable.insert(common_cursor, data={"A": 10, "B": 20})
+        assert SpecialTable.last_query == (
+            "INSERT INTO !the_table! (!A!,!B!) VALUES (Special(>01<),>20<)"
+        )
+
+        await SpecialTable.load(common_cursor, 100)
+        assert SpecialTable.last_query == (
+            "SELECT !pk!,SpecialRead(!A!) AS !A!,!B! FROM !the_table!"
+            " WHERE !pk!=>100< LIMIT 1"
+        )
+
+    asyncio.run(_test())
