@@ -14,7 +14,7 @@ class Calculated:  # pylint: disable=too-few-public-methods
         self.value = value
 
 
-class SpecialHandling:
+class SpecialHandling:  # pylint: disable=too-few-public-methods
     """do complex operations on select/insert/update
 
     The default handling is to con.quote column names on SELECT, and con.escape
@@ -54,7 +54,7 @@ class Table:
     table_name = None
 
     # these values are managed internally
-    calculated = None
+    query_fields = None
     special = {}
     pk = None
     fields = []
@@ -96,8 +96,10 @@ class Table:
                 if column_name in cls.special:
                     special = cls.special[column_name]
                     if hasattr(special, "read_column_fn"):
-                        result = special.read_column_fn(con, column_name) +\
-                            f" AS {cls.quote(column_name)}"
+                        result = (
+                            special.read_column_fn(con, column_name)
+                            + f" AS {cls.quote(column_name)}"
+                        )
                 return result
 
             fields.extend(read_column(con, col) for col in cls.fields)

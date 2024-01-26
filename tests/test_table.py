@@ -15,7 +15,7 @@ def test_setup(common_cursor, table):
         assert table.pk == common_cursor.primary_key_column_
         assert table.fields == common_cursor.columns_
         assert table.quote_ == common_cursor.quote_
-        assert table.calculated == ""
+        assert table.query_fields == "!pk!,!A!,!B!"
 
     asyncio.run(_test())
 
@@ -172,7 +172,7 @@ def test_load(common_cursor, table):
         common_cursor.fetchall.return_value = [[1, 2], [3, 4]]
         rs = await table.load(common_cursor, key := random.randint(100, 1000))
         assert table.last_query == (
-            f"SELECT * FROM !test_table! WHERE !pk!=>{key}< LIMIT 1"
+            f"SELECT !pk!,!A!,!B! FROM !test_table! WHERE !pk!=>{key}< LIMIT 1"
         )
         assert rs == {"A": 1, "B": 2}
 
@@ -186,7 +186,7 @@ def test_query(common_cursor, table):
         common_cursor.description = [["A"], ["B"]]
         common_cursor.fetchall.return_value = [[1, 2], [3, 4]]
         rs = await table.query(common_cursor)
-        assert table.last_query == "SELECT * FROM !test_table! WHERE 1=1"
+        assert table.last_query == "SELECT !pk!,!A!,!B! FROM !test_table! WHERE 1=1"
         assert rs == [{"A": 1, "B": 2}, {"A": 3, "B": 4}]
 
     asyncio.run(_test())
@@ -208,7 +208,7 @@ def test_calculated(common_cursor):
         common_cursor.fetchall.return_value = []
         await CalcTable.query(common_cursor)
         assert CalcTable.last_query == (
-            "SELECT *, 10 + 10 AS !another_field!,NOW() AS !now!"
+            "SELECT !pk!,!A!,!B!,10 + 10 AS !another_field!,NOW() AS !now!"
             " FROM !the_table! WHERE 1=1"
         )
 
@@ -221,7 +221,7 @@ def test_special_handling(common_cursor):
     def my_save(con, value):
         return f"Special({con.escape(str(value)[::-1])})"
 
-    def my_read_column(con, column):
+    def my_read_column(_, column):
         return f"SpecialRead({SpecialTable.quote(column)})"
 
     class SpecialTable(tablemap.Table):
@@ -235,7 +235,6 @@ def test_special_handling(common_cursor):
         )
 
     async def _test():
-
         common_cursor.description = []
         common_cursor.fetchall.return_value = []
         await SpecialTable.insert(common_cursor, data={"A": 10, "B": 20})
