@@ -93,14 +93,14 @@ class Adapter(Table):
                 raise TypeError("pk is not compatible with args")
             if condition:
                 raise TypeError("pk is not compatible with condition")
-            result = await super().delete(con, f"{cls.quote(cls.pk)}=%s", pk)
+            result = await super().delete(con, f"{con.quote(cls.pk)}=%s", pk)
         elif condition and hasattr(condition, cls.pk):
             if pk:
                 raise TypeError("object is not compatible with pk")
             if args:
                 raise TypeError("object is not compatible with args")
             pk = getattr(condition, cls.pk)
-            result = await super().delete(con, f"{cls.quote(cls.pk)}=%s", pk)
+            result = await super().delete(con, f"{con.quote(cls.pk)}=%s", pk)
         elif condition:
             if not isinstance(condition, str):
                 raise TypeError("expecting condition to be a str")

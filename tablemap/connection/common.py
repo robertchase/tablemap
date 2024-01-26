@@ -42,9 +42,13 @@ class Cursor(abc.ABC):
         col_names = [row[0] for row in self.description]
         return [dict(zip(col_names, row)) for row in resultset]
 
+    def quote(self, data: str) -> str:
+        """properly quote a database table or column name"""
+        return f"{self.quote_char}{data}{self.quote_char}"
+
     @property
     @abc.abstractmethod
-    def quote(self):
+    def quote_char(self):
         """return character that delimits table or column names"""
 
     @abc.abstractmethod

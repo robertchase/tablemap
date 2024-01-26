@@ -14,7 +14,6 @@ def test_setup(common_cursor, table):
         assert table.is_init is True
         assert table.pk == common_cursor.primary_key_column_
         assert table.fields == common_cursor.columns_
-        assert table.quote_ == common_cursor.quote_
         assert table.query_fields == "!pk!,!A!,!B!"
 
     asyncio.run(_test())
@@ -221,8 +220,8 @@ def test_special_handling(common_cursor):
     def my_save(con, value):
         return f"Special({con.escape(str(value)[::-1])})"
 
-    def my_read_column(_, column):
-        return f"SpecialRead({SpecialTable.quote(column)})"
+    def my_read_column(con, column):
+        return f"SpecialRead({con.quote(column)})"
 
     class SpecialTable(tablemap.Table):
         """test table class with SpecialHandling class fields"""

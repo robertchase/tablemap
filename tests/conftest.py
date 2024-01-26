@@ -31,7 +31,7 @@ def common_cursor():
             self.description = []
 
         @property
-        def quote(self):
+        def quote_char(self):
             return self.quote_
 
         def escape(self, value):

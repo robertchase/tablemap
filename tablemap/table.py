@@ -58,7 +58,6 @@ class Table:
     special = {}
     pk = None
     fields = []
-    quote_ = None
     last_id = None
     last_query = None
     row_count = None
@@ -77,9 +76,6 @@ class Table:
             # extract fields names from database
             cls.pk, cls.fields = await con.columns(cls.table_name)
 
-            # grab quote character from connection
-            cls.quote_ = con.quote
-
             # setup SpecialHandling fields
             cls.special = {
                 k: v
@@ -88,34 +84,29 @@ class Table:
             }
 
             # setup field list for the query method
-            fields = [cls.quote(cls.pk)]
+            fields = [con.quote(cls.pk)]
 
             def read_column(con, column_name):
                 """quote or perform special handling for queried columns"""
-                result = cls.quote(column_name)
+                result = con.quote(column_name)
                 if column_name in cls.special:
                     special = cls.special[column_name]
                     if hasattr(special, "read_column_fn"):
                         result = (
                             special.read_column_fn(con, column_name)
-                            + f" AS {cls.quote(column_name)}"
+                            + f" AS {con.quote(column_name)}"
                         )
                 return result
 
             fields.extend(read_column(con, col) for col in cls.fields)
             fields.extend(
-                f"{v.value} AS {cls.quote(k)}"
+                f"{v.value} AS {con.quote(k)}"
                 for k in dir(cls)
                 if isinstance(v := getattr(cls, k), Calculated)
             )
             cls.query_fields = ",".join(fields)
 
             cls.is_init = True
-
-    @classmethod
-    def quote(cls, data: str) -> str:
-        """properly quote a database table or column name"""
-        return f"{cls.quote_}{data}{cls.quote_}"
 
     @classmethod
     def escape(cls, con, column_name, column_value):
@@ -157,9 +148,9 @@ class Table:
         if raw:
             ins.update(raw)  # overlay insert with raw items
         if ins:
-            cols = ",".join(f"{cls.quote(col)}" for col in ins.keys())
+            cols = ",".join(f"{con.quote(col)}" for col in ins.keys())
             vals = ",".join(v for v in ins.values())
-            insert = f"INSERT INTO {cls.quote(cls.table_name)} ({cols}) VALUES ({vals})"
+            insert = f"INSERT INTO {con.quote(cls.table_name)} ({cols}) VALUES ({vals})"
 
             if cls.pk in data:
                 await con.execute(insert)
@@ -185,11 +176,11 @@ class Table:
         if raw:
             upd.update(raw)  # overlay update with raw items
         if upd:
-            upd = ",".join(f"{cls.quote(k)}={v}" for k, v in upd.items())
+            upd = ",".join(f"{con.quote(k)}={v}" for k, v in upd.items())
             cls.last_query = (
-                f"UPDATE {cls.quote(cls.table_name)}"
+                f"UPDATE {con.quote(cls.table_name)}"
                 f" SET {upd}"
-                f" WHERE {cls.quote(cls.pk)}={con.escape(data[cls.pk])}"
+                f" WHERE {con.quote(cls.pk)}={con.escape(data[cls.pk])}"
             )
             await con.execute(cls.last_query)
             cls.row_count = con.rowcount
@@ -205,7 +196,7 @@ class Table:
                 args = args[0]
             condition = condition % args
         cls.last_query = (
-            f"DELETE FROM {cls.quote(cls.table_name)}" f" WHERE {condition}"
+            f"DELETE FROM {con.quote(cls.table_name)}" f" WHERE {condition}"
         )
         await con.execute(cls.last_query)
         cls.row_count = con.rowcount
@@ -222,7 +213,7 @@ class Table:
             condition = condition % args
         query = (
             f"SELECT {cls.query_fields}"
-            f" FROM {cls.quote(cls.table_name)} WHERE {condition}"
+            f" FROM {con.quote(cls.table_name)} WHERE {condition}"
         )
         if limit:
             query += f" LIMIT {limit}"
@@ -232,7 +223,7 @@ class Table:
     async def load(cls, con, pk) -> dict:
         """return a dict (or None) for a row with primary_key=key"""
         await cls.setup(con)
-        cls.last_query = cls.build(con, f"{cls.quote(cls.pk)}=%s", pk, limit=1)
+        cls.last_query = cls.build(con, f"{con.quote(cls.pk)}=%s", pk, limit=1)
         rs = await con.select(cls.last_query)
         cls.row_count = len(rs)
         return rs[0] if cls.row_count else None

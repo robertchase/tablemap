@@ -20,7 +20,7 @@ class MysqlCursor(common.Cursor):
     """mysql cursor extension"""
 
     @property
-    def quote(self):
+    def quote_char(self):
         return "`"
 
     def escape(self, value):
