@@ -152,6 +152,7 @@ class Table:
             vals = ",".join(v for v in ins.values())
             insert = f"INSERT INTO {con.quote(cls.table_name)} ({cols}) VALUES ({vals})"
 
+            cls.last_query = insert
             if cls.pk in data:
                 await con.execute(insert)
             else:
