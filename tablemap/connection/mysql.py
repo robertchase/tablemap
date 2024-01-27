@@ -27,7 +27,7 @@ class MysqlCursor(common.Cursor):
         return common.escape(value, "'", r"\'")
 
     async def columns(self, tablename):
-        query = f"DESCRIBE {self.quote}{tablename}{self.quote}"
+        query = f"DESCRIBE {self.quote(tablename)}"
         cols = await self.select(query)
         pks = [f["Field"] for f in cols if f["Key"] == "PRI"]
         pk = pks[0] if len(pks) == 1 else None
