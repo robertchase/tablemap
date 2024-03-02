@@ -42,6 +42,15 @@ class Cursor(abc.ABC):
         col_names = [row[0] for row in self.description]
         return [dict(zip(col_names, row)) for row in resultset]
 
+    async def select_one(self, query):
+        """return single value from query
+
+        this might be useful for a COUNT(*) query, for example
+        """
+        await self.execute(query)
+        value, = await self.fetchone()
+        return value
+
     def quote(self, data: str) -> str:
         """properly quote a database table or column name"""
         return f"{self.quote_char}{data}{self.quote_char}"
