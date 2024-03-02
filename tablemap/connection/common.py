@@ -48,7 +48,7 @@ class Cursor(abc.ABC):
         this might be useful for a COUNT(*) query, for example
         """
         await self.execute(query)
-        value, = await self.fetchone()
+        (value,) = await self.fetchone()
         return value
 
     def quote(self, data: str) -> str:
