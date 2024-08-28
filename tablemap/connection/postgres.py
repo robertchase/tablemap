@@ -1,4 +1,5 @@
 """postgres database connection management"""
+
 import aiopg
 
 from tablemap.connection import common

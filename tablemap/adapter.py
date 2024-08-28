@@ -1,5 +1,6 @@
 """provide a layer between objects and a Table mapper
 """
+
 from tablemap.table import Table
 
 
@@ -109,3 +110,19 @@ class Adapter(Table):
             raise TypeError("no arguments specified")
 
         return result
+
+    @classmethod
+    async def count(cls, con, where_clause: str = "1=1") -> int:
+        """Count rows that would be returned by "where_clause"."""
+        return await con.select_one(
+            f"SELECT COUNT(*) FROM {con.quote(cls.table_name)}" f" WHERE {where_clause}"
+        )
+
+    @classmethod
+    async def exists(cls, con, pk) -> bool:
+        """Check if primary key (pk) exists in table."""
+        await cls.setup(con)
+        return await con.select_one(
+            f"SELECT COUNT(*) FROM {con.quote(cls.table_name)}"
+            f" WHERE {con.quote(cls.pk)}={con.escape(pk)}"
+        )

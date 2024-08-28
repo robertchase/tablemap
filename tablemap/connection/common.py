@@ -1,4 +1,5 @@
 """routines common to all cursors"""
+
 import abc
 
 

@@ -1,4 +1,5 @@
 """test common cursor methods"""
+
 import asyncio
 from unittest import mock
 

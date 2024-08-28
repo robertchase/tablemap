@@ -1,5 +1,6 @@
 tmp*
 .env
+.venv
 *.swp
 *.pyc
 *-checkpoint.ipynb

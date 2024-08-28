@@ -347,6 +347,69 @@ Delete a row from the underlying table.
 Return the number of rows affected
 
 ---
+#### count
+
+```
+@classmethod
+async def count(cls,
+                con: tablemap.connection.common.Connector,
+                where_clause: str = "1=1") -> int
+```
+
+Count the number of rows in the table that match `where_clause`.
+
+###### parameters
+
+*where_clause* - where clause defining a subset of the table
+
+###### description
+
+The `where_clause` can be arbitrarily complex. No escaping is performed on the `where_clause`.
+
+This is a simple helper function designed to make counting rows in a single
+table easy. Multi-table counts will have to be performed with a custom query.
+
+###### side effects
+
+* the class variable `last_id` will contain None
+* the class variable `last_query` will contain the `SQL` statement executed
+* the class variable `row_count` will contain the number of rows affected
+
+###### return
+
+Return the number of rows matching the `where_clause` (could be zero)
+
+---
+#### exists
+
+```
+@classmethod
+async def exists(cls,
+                 con: tablemap.connection.common.Connector,
+                 pk: int|str) -> int
+```
+
+Check if `pk` exists in the primary key column of the table.
+
+###### parameters
+
+*pk* - a primary key value
+
+###### description
+
+Perform a simple `COUNT(*)` of rows with the primary key matching `pk`.
+
+###### side effects
+
+* the class variable `last_id` will contain None
+* the class variable `last_query` will contain the `SQL` statement executed
+* the class variable `row_count` will contain the number of rows affected
+
+###### return
+
+Return zero or one.
+
+---
 #### before_save
 
 ```

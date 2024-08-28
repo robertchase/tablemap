@@ -1,4 +1,5 @@
 """mysql database connection management"""
+
 import aiomysql
 
 from tablemap.connection import common
