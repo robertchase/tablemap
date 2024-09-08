@@ -61,8 +61,8 @@ class Adapter(Table):
         return cls.object_factory(rs)
 
     @classmethod
-    async def query(cls, con, *args, limit=None, **kwargs):
-        rs = await super().query(con, *args, limit=limit, **kwargs)
+    async def query(cls, con, *args, limit=None, offset=None, **kwargs):
+        rs = await super().query(con, *args, limit=limit, offset=offset, **kwargs)
 
         async def _load(item: dict):
             item = await cls.after_load(con, item)
@@ -73,9 +73,7 @@ class Adapter(Table):
             if limit == 1:
                 result = await _load(rs)
             else:
-                result = []
-                for item in rs:
-                    result.append(await _load(item))
+                result = [await _load(item) for item in rs]
 
         return result
 

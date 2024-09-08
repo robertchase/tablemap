@@ -204,7 +204,9 @@ class Table:
         return cls.row_count
 
     @classmethod
-    def build(cls, con, condition: str, args, limit: int = None) -> str:
+    def build(  # pylint: disable=too-many-arguments
+        cls, con, condition: str, args, limit: int = None, offset: int = None
+    ) -> str:
         """build a query string"""
         if args:
             if isinstance(args, (list, tuple)):
@@ -216,8 +218,10 @@ class Table:
             f"SELECT {cls.query_fields}"
             f" FROM {con.quote(cls.table_name)} WHERE {condition}"
         )
-        if limit:
+        if limit is not None:
             query += f" LIMIT {limit}"
+            if offset is not None:
+                query += f" OFFSET {offset}"
         return query
 
     @classmethod
@@ -230,10 +234,11 @@ class Table:
         return rs[0] if cls.row_count else None
 
     @classmethod
-    async def query(cls, con, condition="1=1", args=None, limit=None):
+    # pylint: disable-next=too-many-arguments
+    async def query(cls, con, condition="1=1", args=None, limit=None, offset=None):
         """return a list of dicts for each row matching condition"""
         await cls.setup(con)
-        cls.last_query = cls.build(con, condition, args, limit)
+        cls.last_query = cls.build(con, condition, args, limit, offset)
         rs = await con.select(cls.last_query)
         cls.row_count = con.rowcount
 
