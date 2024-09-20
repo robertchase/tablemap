@@ -56,9 +56,10 @@ class Adapter(Table):
 
     @classmethod
     async def load(cls, con, pk):
-        rs = await super().load(con, pk)
-        rs = await cls.after_load(con, rs)
-        return cls.object_factory(rs)
+        if rs := await super().load(con, pk):
+            rs = await cls.after_load(con, rs)
+            rs = cls.object_factory(rs)
+        return rs
 
     @classmethod
     async def query(cls, con, *args, limit=None, offset=None, **kwargs):
