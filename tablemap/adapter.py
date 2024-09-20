@@ -62,8 +62,8 @@ class Adapter(Table):
         return rs
 
     @classmethod
-    async def query(cls, con, *args, limit=None, offset=None, **kwargs):
-        rs = await super().query(con, *args, limit=limit, offset=offset, **kwargs)
+    async def query(cls, con, *args, limit=None, offset=None):
+        rs = await super().query(con, *args, limit=limit, offset=offset)
 
         async def _load(item: dict):
             item = await cls.after_load(con, item)
